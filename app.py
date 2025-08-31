@@ -18,7 +18,6 @@ st.set_page_config(
 
 # --- 2. HELPER FUNCTIONS ---
 
-# --- Predictive Maintenance Functions ---
 @st.cache_data
 def generate_full_field_data(asset_ids):
     """Generates realistic sensor data for multiple assets. Cached to run only once."""
@@ -51,7 +50,6 @@ def train_forecasting_model(_data):
     prediction = model.predict(np.array([[last_time_idx + 1]]))
     return prediction[0]
 
-# --- Drillstring Simulator Functions ---
 def run_drillstring_model(params):
     time_sim = np.linspace(0, 10, 1000)
     freq = params["rpm"] / 60
@@ -199,15 +197,16 @@ with tab4:
     ax.plot(time_sim, displacement, label="Axial Displacement (m)", color="darkorange")
     ax.set_xlabel("Time (s)"); ax.set_ylabel("Response"); ax.set_title("Drillstring Response Over Time"); ax.legend(); ax.grid(True, alpha=0.3); st.pyplot(fig)
 
-# Predictive Maintenance Tabs with On-Demand Loading
+# UNABRIDGED Predictive Maintenance Tabs with On-Demand Loading
 placeholder = st.container()
 
 if not st.session_state.maintenance_data_ready:
-    with placeholder:
+    # Use columns to make the button less wide and more centered
+    col_button1, col_button2, col_button3 = st.columns([1,2,1])
+    with col_button2:
         st.warning("The Predictive Maintenance module is not loaded. This is done to ensure a fast initial startup.")
-        if st.button("Load Asset Data & Train AI Models"):
+        if st.button("Load Asset Data & Train AI Models", use_container_width=True):
             with st.spinner("Performing one-time data generation and model training... Please wait."):
-                # This logic now runs only ONCE when the button is clicked
                 asset_ids = ['ESP_01', 'Pump_02', 'Valve_03', 'Compressor_04']
                 full_data = generate_full_field_data(asset_ids)
                 st.session_state.full_field_df = full_data
@@ -221,6 +220,7 @@ if not st.session_state.maintenance_data_ready:
             st.success("Maintenance module loaded successfully! The tabs are now active.")
             st.rerun()
 else:
+    # This block runs only AFTER the data has been loaded and models trained.
     df_with_anomalies = st.session_state.df_with_anomalies
     with tab5:
         st.header("Field-Wide Asset Health")
