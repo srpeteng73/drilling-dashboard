@@ -11,7 +11,7 @@ from sklearn.ensemble import IsolationForest
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import MinMaxScaler
 
-# --- 1. PAGE CONFIGURATION (do this first) ---
+# --- 1. PAGE CONFIGURATION ---
 st.set_page_config(
     page_title="Drilling & Maintenance Suite",
     layout="wide",
@@ -42,23 +42,15 @@ def train_anomaly_model(_data):
     model.fit(_data[['temperature', 'vibration']])
     return model
 
-# THIS FUNCTION IS NOW CORRECTED
 @st.cache_resource
 def train_forecasting_model(_data):
     """Trains a lightweight forecasting model for a given asset. Cached per asset."""
     df = _data.copy()
-    # Create features for the model
     df['time_idx'] = (df['timestamp'] - df['timestamp'].min()).dt.total_seconds() / 3600.0
-    
-    # Train the model
     model = LinearRegression()
     model.fit(df[['time_idx']], df['temperature'])
-    
-    # Predict the next hour
     last_time_idx = df['time_idx'].iloc[-1]
-    next_time_idx = last_time_idx + 1
-    
-    prediction = model.predict(np.array([[next_time_idx]]))
+    prediction = model.predict(np.array([[last_time_idx + 1]]))
     return prediction[0]
 
 # --- Drillstring Simulator Functions ---
@@ -102,29 +94,35 @@ def main():
     # --- UI LAYOUT ---
     st.title("Comprehensive Drilling & Asset Management Suite")
 
-    # --- SIDEBAR ---
+    # --- SIDEBAR (Houses all user controls for a clean UI) ---
     with st.sidebar:
         st.header("Drilling Suite Controls")
         rpm_mean = st.slider("Live Target RPM", 100, 200, 150)
         vibration_threshold = st.slider("Live Vibration Threshold", 0.8, 1.5, 1.0)
+        
+        st.markdown("---")
         st.header("Drillstring Simulator Controls")
-        sim_rpm = st.slider("Simulated RPM", 30, 300, 120)
-        sim_wob = st.slider("Simulated WOB (kN)", 10, 100, 50)
-        sim_formation = st.selectbox("Formation Type", ["Soft", "Medium", "Hard"])
-        sim_bit_type = st.selectbox("Bit Type", ["PDC", "Tricone", "Diamond"])
-        sim_mud_type = st.selectbox("Mud Type", ["Water-based", "Oil-based", "Synthetic"])
-        sim_bha_stiffness = st.slider("BHA Stiffness (kN/m)", 10, 100, 50)
+        sim_rpm = st.slider("Simulated RPM", 30, 300, 120, key="sim_rpm")
+        sim_wob = st.slider("Simulated WOB (kN)", 10, 100, 50, key="sim_wob")
+        sim_formation = st.selectbox("Formation Type", ["Soft", "Medium", "Hard"], key="sim_formation")
+        sim_bit_type = st.selectbox("Bit Type", ["PDC", "Tricone", "Diamond"], key="sim_bit_type")
+        sim_mud_type = st.selectbox("Mud Type", ["Water-based", "Oil-based", "Synthetic"], key="sim_mud_type")
+        sim_bha_stiffness = st.slider("BHA Stiffness (kN/m)", 10, 100, 50, key="sim_bha")
+        
+        st.markdown("---")
         st.header("Predictive Maintenance Settings")
         temp_threshold = st.slider("Temperature Threshold (°F)", 80, 120, 95)
         vib_threshold = st.slider("Vibration Threshold (g)", 0.2, 1.0, 0.5, step=0.05)
         downtime_cost = st.slider("Downtime Cost per Hour ($)", 500, 5000, 1000, step=100)
 
     # --- TABS ---
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["**Summary**", "**User Guide**", "**Live Drilling**", "**Simulator**", "**Asset Health**", "**AI Forecast**", "**Maintenance Plan**"])
+    tab_names = ["Summary", "User Guide", "Live Drilling", "Simulator", "Asset Health", "AI Forecast", "Maintenance Plan"]
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([f"**{name}**" for name in tab_names])
 
+    # RESTORED: Full, detailed summary
     with tab1:
         st.header("An Integrated Solution for Modern Oilfield Operations")
-        st.markdown('<p class="guide-text">Developed by <strong>Mr. Omar Nur, a Petroleum Engineer</strong>, this application suite provides a holistic view of oilfield management, from real-time drilling optimization to full-field predictive asset maintenance.</p>', unsafe_allow_html=True)
+        st.markdown('<p>Developed by <strong>Mr. Omar Nur, a Petroleum Engineer</strong>, this application suite provides a holistic view of oilfield management, from real-time drilling optimization to full-field predictive asset maintenance.</p>', unsafe_allow_html=True)
         st.subheader("Suite Components")
         col1, col2 = st.columns(2)
         with col1:
@@ -133,17 +131,32 @@ def main():
         with col2:
             st.markdown("#### Predictive Maintenance Suite")
             st.markdown("- **Asset Health Overview:** Monitor the status of all field assets (ESPs, pumps, valves) from a central hub.\n- **AI Forecasting:** A lightweight model predicts equipment failures before they happen.\n- **Optimized Scheduling:** Data-driven maintenance plans prioritize work based on operational risk and cost.")
-        st.markdown('<p class="guide-text">This integrated approach allows teams to move from a reactive to a proactive operational strategy, significantly reducing non-productive time (NPT), lowering maintenance costs, and enhancing overall safety.</p>', unsafe_allow_html=True)
+        st.markdown('<p>This integrated approach allows teams to move from a reactive to a proactive operational strategy, significantly reducing non-productive time (NPT), lowering maintenance costs, and enhancing overall safety.</p>', unsafe_allow_html=True)
 
+    # RESTORED: Full user guide with expandable sections
     with tab2:
         st.header("How to Use This Suite: A Practical Guide")
-        st.subheader("Scenario 1: Using the Live Dashboard")
+        st.subheader("Scenario 1: Using the Live Dashboard for Real-Time Adjustments")
         with st.expander("Click to see a Live Dashboard example"):
-            st.markdown("""...""") # Add full user guide text
-        st.subheader("Scenario 2: Using the Simulator")
+            st.markdown("""
+            The **Live Dashboard** is your real-time eye on the operation. It helps you react instantly to changing downhole conditions.
+            **Example Scenario:**
+            - **Situation:** While drilling, you are monitoring the 'Live Drilling' tab. You notice the **Live ROP (ft/hr)** metric begins to drop, and simultaneously, a yellow warning box appears: **"HIGH VIBRATION DETECTED!"**.
+            - **Action:** In the sidebar, you slightly decrease the **'Live Target RPM'** slider from 150 to 140.
+            - **Result:** You click the 'Refresh Live Data' button. The 'Vibration' chart immediately smooths out, the warning is gone, and ROP begins to recover. You have successfully mitigated a harmful vibration issue.
+            """)
+        st.subheader("Scenario 2: Using the Simulator for Proactive Planning")
         with st.expander("Click to see a Drillstring Simulator example"):
-            st.markdown("""...""") # Add full user guide text
+            st.markdown("""
+            The **Simulator** is your predictive planning tool. It allows you to test drilling parameters *before* applying them.
+            **Example Scenario:**
+            - **Planning:** Before drilling a new, hard formation, you set the 'Formation Type' to 'Hard' in the sidebar and input your planned RPM and WOB.
+            - **Analysis:** You navigate to the 'Simulator' tab and observe a very high 'Stick-Slip Index' and an erratic torque wave on the graph. The planned parameters are risky.
+            - **Optimization:** You interactively adjust the RPM and WOB sliders in the sidebar. The simulation instantly reruns, showing you the effect of your changes.
+            - **Result:** You find a combination of parameters that minimizes the 'Stick-Slip Index'. You now have a safer, more stable drilling plan to provide to the rig crew.
+            """)
 
+    # RESTORED: Full Live Drilling tab with all variables and charts
     with tab3:
         st.header("Real-Time Drilling Monitor")
         if st.button("Refresh Live Data"):
@@ -151,7 +164,10 @@ def main():
             new_rpm = np.random.normal(loc=rpm_mean, scale=10)
             new_torque = np.random.normal(loc=500, scale=50)
             new_vibration = np.random.normal(loc=0.5, scale=0.1)
-            new_row = pd.DataFrame([{"Timestamp": new_timestamp, "RPM": new_rpm, "Torque": new_torque, "Vibration": new_vibration}])
+            last_wear = st.session_state.drilling_data["Bit Wear Index"].iloc[-1] if not st.session_state.drilling_data.empty else 0
+            new_bit_wear = np.clip(last_wear + np.random.normal(0.0005, 0.0002), 0, 1)
+            new_rop = np.clip(100 - new_bit_wear * 80 + np.random.normal(0, 2), 20, 100)
+            new_row = pd.DataFrame([{"Timestamp": new_timestamp, "RPM": new_rpm, "Torque": new_torque, "Vibration": new_vibration, "Bit Wear Index": new_bit_wear, "ROP (ft/hr)": new_rop}])
             st.session_state.drilling_data = pd.concat([st.session_state.drilling_data, new_row], ignore_index=True).tail(200)
 
         st.subheader("Current Drilling Parameters")
@@ -160,26 +176,38 @@ def main():
             kpi1, kpi2, kpi3 = st.columns(3)
             kpi1.metric(label="Live RPM", value=f"{latest_data['RPM']:.1f}")
             kpi2.metric(label="Live Torque (Nm)", value=f"{latest_data['Torque']:.1f}")
-            kpi3.metric(label="Live Vibration", value=f"{latest_data['Vibration']:.2f}")
-            st.line_chart(st.session_state.drilling_data.set_index("Timestamp"))
+            kpi3.metric(label="Live ROP (ft/hr)", value=f"{latest_data['ROP (ft/hr)']:.1f}")
+            
+            st.subheader("System Alerts")
+            if latest_data['Vibration'] > vibration_threshold:
+                st.warning(f"HIGH VIBRATION DETECTED! Current Level: {latest_data['Vibration']:.2f}")
+            else:
+                st.success(f"Vibration levels normal. Current Level: {latest_data['Vibration']:.2f}")
+
+            st.subheader("Live Sensor Charts")
+            st.line_chart(st.session_state.drilling_data.set_index("Timestamp")[["RPM", "Torque"]])
+            st.line_chart(st.session_state.drilling_data.set_index("Timestamp")[["Vibration"]])
+            st.line_chart(st.session_state.drilling_data.set_index("Timestamp")[["Bit Wear Index", "ROP (ft/hr)"]])
         else:
             st.info("Click 'Refresh Live Data' to start monitoring.")
 
+    # RESTORED: Full Simulator tab
     with tab4:
         st.header("Drillstring Dynamics Dashboard")
+        st.markdown("Adjust parameters in the sidebar to see how they affect drillstring stability. The simulation will update automatically.")
         sim_params = {"rpm": sim_rpm, "wob": sim_wob, "formation": sim_formation, "bit_type": sim_bit_type, "mud_type": sim_mud_type, "bha_stiffness": sim_bha_stiffness}
         time_sim, torque, displacement, rpm_series = run_drillstring_model(sim_params)
         ss_index, vibration_severity = compute_metrics(torque, rpm_series)
         st.subheader("Simulation Results")
         col1, col2 = st.columns(2)
-        col1.metric("Stick-Slip Index", ss_index, help="A measure of torsional instability.")
-        col2.metric("Vibration Severity", vibration_severity, help="Indicates axial vibration.")
+        col1.metric("Stick-Slip Index", f"{ss_index:.2f}", help="A measure of torsional instability. Lower is better.")
+        col2.metric("Vibration Severity", f"{vibration_severity:.2f}", help="Indicates axial vibration. Lower is better.")
         fig, ax = plt.subplots(figsize=(10, 5))
         ax.plot(time_sim, torque, label="Torque (Nm)", color="dodgerblue")
         ax.plot(time_sim, displacement, label="Axial Displacement (m)", color="darkorange")
         ax.set_xlabel("Time (s)"); ax.set_ylabel("Response"); ax.set_title("Drillstring Response Over Time"); ax.legend(); ax.grid(True, alpha=0.3); st.pyplot(fig)
 
-    # --- Predictive Maintenance Tabs ---
+    # --- Predictive Maintenance Tabs (using pre-loaded data) ---
     df_with_anomalies = st.session_state.df_with_anomalies
     with tab5:
         st.header("Field-Wide Asset Health")
