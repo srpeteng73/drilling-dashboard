@@ -61,7 +61,7 @@ def run_drillstring_model(params):
     bit = {"PDC": 1.0, "Tricone": 0.9, "Diamond": 1.1}[params["bit_type"]]
     mud = {"Water-based": 1.0, "Oil-based": 1.05, "Synthetic": 1.1}[params["mud_type"]]
     stiffness = params["bha_stiffness"] / 50
-    torque = params["wob"] / 20 * np.sin(2 * np.pi * freq * time_sim) * friction * bit * mud
+    torque = params["wob"] * 0.05 * np.sin(2 * np.pi * freq * time_sim) * friction * bit * mud
     displacement = np.cumsum(torque) * 0.01 / stiffness
     rpm_series = np.full_like(time_sim, params["rpm"]) + np.random.normal(0, 2, size=time_sim.shape)
     return time_sim, torque, displacement, rpm_series
@@ -119,6 +119,7 @@ def main():
     tab_names = ["Summary", "User Guide", "Live Drilling", "Simulator", "Asset Health", "AI Forecast", "Maintenance Plan"]
     tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([f"**{name}**" for name in tab_names])
 
+    # UNABRIDGED TAB 1: SUMMARY
     with tab1:
         st.header("An Integrated Solution for Modern Oilfield Operations")
         st.markdown('<p>Developed by <strong>Mr. Omar Nur, a Petroleum Engineer</strong>, this application suite provides a holistic view of oilfield management, from real-time drilling optimization to full-field predictive asset maintenance.</p>', unsafe_allow_html=True)
@@ -132,12 +133,14 @@ def main():
             st.markdown("- **Asset Health Overview:** Monitor the status of all field assets (ESPs, pumps, valves) from a central hub.\n- **AI Forecasting:** A lightweight model predicts equipment failures before they happen.\n- **Optimized Scheduling:** Data-driven maintenance plans prioritize work based on operational risk and cost.")
         st.markdown('<p>This integrated approach allows teams to move from a reactive to a proactive operational strategy, significantly reducing non-productive time (NPT), lowering maintenance costs, and enhancing overall safety.</p>', unsafe_allow_html=True)
 
+    # UNABRIDGED TAB 2: USER GUIDE
     with tab2:
         st.header("How to Use This Suite: A Practical Guide")
         st.subheader("Scenario 1: Using the Live Dashboard for Real-Time Adjustments")
         with st.expander("Click to see a Live Dashboard example"):
             st.markdown("""
             The **Live Dashboard** is your real-time eye on the operation. It helps you react instantly to changing downhole conditions.
+            
             **Example Scenario:**
             - **Situation:** While drilling, you are monitoring the 'Live Drilling' tab. You notice the **Live ROP (ft/hr)** metric begins to drop, and simultaneously, a yellow warning box appears: **"HIGH VIBRATION DETECTED!"**.
             - **Action:** In the sidebar, you slightly decrease the **'Live Target RPM'** slider from 150 to 140.
@@ -147,6 +150,7 @@ def main():
         with st.expander("Click to see a Drillstring Simulator example"):
             st.markdown("""
             The **Simulator** is your predictive planning tool. It allows you to test drilling parameters *before* applying them.
+            
             **Example Scenario:**
             - **Planning:** Before drilling a new, hard formation, you set the 'Formation Type' to 'Hard' in the sidebar and input your planned RPM and WOB.
             - **Analysis:** You navigate to the 'Simulator' tab and observe a very high 'Stick-Slip Index' and an erratic torque wave on the graph. The planned parameters are risky.
@@ -154,6 +158,7 @@ def main():
             - **Result:** You find a combination of parameters that minimizes the 'Stick-Slip Index'. You now have a safer, more stable drilling plan to provide to the rig crew.
             """)
 
+    # UNABRIDGED & CORRECTED TAB 3: LIVE DRILLING
     with tab3:
         st.header("Real-Time Drilling Monitor")
         
@@ -197,6 +202,7 @@ def main():
         else:
             st.info("Click 'Refresh Live Data' to start monitoring.")
 
+    # UNABRIDGED TAB 4: SIMULATOR
     with tab4:
         st.header("Drillstring Dynamics Dashboard")
         st.markdown("Adjust parameters in the sidebar to see how they affect drillstring stability. The simulation will update automatically.")
@@ -212,6 +218,7 @@ def main():
         ax.plot(time_sim, displacement, label="Axial Displacement (m)", color="darkorange")
         ax.set_xlabel("Time (s)"); ax.set_ylabel("Response"); ax.set_title("Drillstring Response Over Time"); ax.legend(); ax.grid(True, alpha=0.3); st.pyplot(fig)
 
+    # UNABRIDGED PREDICTIVE MAINTENANCE TABS
     df_with_anomalies = st.session_state.df_with_anomalies
     with tab5:
         st.header("Field-Wide Asset Health")
