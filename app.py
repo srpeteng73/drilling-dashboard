@@ -209,7 +209,7 @@ with tab2:
 with tab3:
     st.header("Real-Time Drilling Monitor")
     if st.button("Refresh Live Data"):
-        last_wear = st.session_state.drilling_data['Bit Wear Index'].iloc[-1] if not st.session_state.drilling_data.empty else 0
+        last_wear = st.session_state.drilling_data['Bit Wear Index'].iloc[-1] if not st.session_state.drillling_data.empty else 0
         rpm = np.random.normal(loc=rpm_mean, scale=10)
         torque = np.random.normal(loc=500, scale=50)
         vibration = np.random.normal(loc=0.5, scale=0.1)
@@ -278,7 +278,10 @@ with tab4:
     ax.plot(time_sim, torque, label="Torque", color='#4A90E2')
     ax.plot(time_sim, displacement, label="Displacement", color='#8E2DE2')
     ax.legend()
-    ax.set_facecolor('rgba(0,0,0,0)')
+    
+    # --- BUG FIX (2025-08-31): Changed facecolor argument to a tuple to fix ValueError ---
+    ax.set_facecolor((0, 0, 0, 0)) # Use a tuple (0,0,0,0) instead of a string 'rgba(0,0,0,0)'
+    
     fig.patch.set_alpha(0.0)
     ax.tick_params(colors='white', which='both')
     ax.spines['left'].set_color('white')
