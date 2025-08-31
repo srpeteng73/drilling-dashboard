@@ -7,13 +7,13 @@ import plotly.express as px
 import matplotlib.pyplot as plt
 import os
 
-# ML/AI Libraries - import them all at the top
+# ML/AI Libraries
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Input
 
-# --- 1. PAGE CONFIGURATION (do this first) ---
+# --- 1. PAGE CONFIGURATION ---
 st.set_page_config(
     page_title="Drilling & Maintenance Suite",
     layout="wide",
@@ -27,7 +27,7 @@ st.set_page_config(
 def generate_full_field_data(asset_ids, start_time='2025-08-01', total_periods=200):
     all_asset_data = []
     for asset_id in asset_ids:
-        time_index = pd.date_range(start=start_time, periods=total_periods, freq='h')
+        time_index = pd.date_range(start=start_time, periods=total_periods, freq='h') # Corrected freq to 'h'
         temp = np.random.normal(loc=75, scale=2, size=total_periods)
         vibe = np.random.normal(loc=0.3, scale=0.05, size=total_periods)
         anomaly_start = np.random.randint(total_periods // 2, total_periods - 20)
@@ -58,7 +58,7 @@ def train_lstm_model(data, feature='temperature'):
         X_train.append(scaled_series[i:i+10])
         y_train.append(scaled_series[i+10])
     X_train, y_train = np.array(X_train), np.array(y_train)
-    lstm_model = Sequential([Input(shape=(10, 1)), LSTM(50, activation='relu'), Dense(1)])
+    lstm_model = Sequential([Input(shape=(10, 1)), LSTM(50, activation='relu'), Dense(1)]) # Corrected model definition
     lstm_model.compile(optimizer='adam', loss='mean_squared_error')
     lstm_model.fit(X_train, y_train, epochs=1, verbose=0)
     return lstm_model, scaler
@@ -123,19 +123,34 @@ def main():
     # --- TAB 1: EXECUTIVE SUMMARY ---
     with tab1:
         st.header("An Integrated Solution for Modern Oilfield Operations")
-        # ... full text content ...
+        st.markdown('<p class="guide-text">Developed by <strong>Mr. Omar Nur, a Petroleum Engineer</strong>, this application suite provides a holistic view of oilfield management, from real-time drilling optimization to full-field predictive asset maintenance.</p>', unsafe_allow_html=True)
+        st.subheader("Suite Components")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("#### Drilling Operations Suite")
+            st.markdown("- **Live Dashboard:** Real-time monitoring of critical drilling parameters like ROP, Torque, and Vibration.\n- **Drilling Simulator:** A predictive tool to test and optimize drilling parameters *before* implementation, mitigating risks like stick-slip.")
+        with col2:
+            st.markdown("#### Predictive Maintenance Suite")
+            st.markdown("- **Asset Health Overview:** Monitor the status of all field assets (ESPs, pumps, valves) from a central hub.\n- **AI Forecasting:** A neural network predicts equipment failures before they happen.\n- **Optimized Scheduling:** Data-driven maintenance plans prioritize work based on operational risk and cost.")
+        st.markdown('<p class="guide-text">This integrated approach allows teams to move from a reactive to a proactive operational strategy, significantly reducing non-productive time (NPT), lowering maintenance costs, and enhancing overall safety.</p>', unsafe_allow_html=True)
 
     # --- TAB 2: USER GUIDE ---
     with tab2:
         st.header("How to Use This Suite: A Practical Guide")
-        # ... full text content ...
+        st.subheader("Scenario 1: Using the Live Dashboard for Real-Time Adjustments")
+        with st.expander("Click here to see a Live Dashboard example"):
+            st.markdown("""...""") # Add full user guide text here
+
+        st.subheader("Scenario 2: Using the Simulator for Proactive Planning")
+        with st.expander("Click here to see a Drillstring Simulator example"):
+            st.markdown("""...""") # Add full user guide text here
     
-    # --- TAB 3: LIVE DRILLING (REFACTORED AND STABLE) ---
+    # --- TAB 3: LIVE DRILLING ---
     with tab3:
         st.header("Real-Time Drilling Monitor")
         placeholder = st.empty()
-
-        # Generate new data row
+        
+        # This part of the script will be executed in a loop by st.rerun() at the end
         new_timestamp = datetime.datetime.now()
         new_rpm = np.random.normal(loc=rpm_mean, scale=10)
         new_torque = np.random.normal(loc=500, scale=50)
@@ -143,14 +158,11 @@ def main():
         last_wear = st.session_state.drilling_data["Bit Wear Index"].iloc[-1] if not st.session_state.drilling_data.empty else 0
         new_bit_wear = np.clip(last_wear + np.random.normal(0.0005, 0.0002), 0, 1)
         new_rop = np.clip(100 - new_bit_wear * 80 + np.random.normal(0, 2), 20, 100)
-        
         new_row = pd.DataFrame([{"Timestamp": new_timestamp, "RPM": new_rpm, "Torque": new_torque, "Vibration": new_vibration, "Bit Wear Index": new_bit_wear, "ROP (ft/hr)": new_rop}])
         
-        # Update session state
         st.session_state.drilling_data = pd.concat([st.session_state.drilling_data, new_row], ignore_index=True).tail(200)
         st.session_state.session_history = pd.concat([st.session_state.session_history, new_row], ignore_index=True)
         
-        # Display content in placeholder
         with placeholder.container():
             kpi1, kpi2, kpi3 = st.columns(3)
             kpi1.metric(label="Live RPM", value=f"{new_rpm:.1f}")
@@ -161,7 +173,6 @@ def main():
             if new_vibration > vibration_threshold: st.warning(f"HIGH VIBRATION DETECTED! Level: {new_vibration:.2f}")
             else: st.success(f"Vibration levels normal. Level: {new_vibration:.2f}")
 
-        # Auto-refresh mechanism
         time.sleep(1)
         st.rerun()
 
@@ -170,7 +181,15 @@ def main():
         st.header("Drillstring Dynamics Dashboard")
         sim_params = {"rpm": sim_rpm, "wob": sim_wob, "formation": sim_formation, "bit_type": sim_bit_type, "mud_type": sim_mud_type, "bha_stiffness": sim_bha_stiffness}
         time_sim, torque, displacement, rpm_series = run_drillstring_model(sim_params)
-        # ... rest of the tab's code ...
+        ss_index, vibration_severity = compute_metrics(torque, rpm_series)
+        st.subheader("Simulation Results")
+        col1, col2 = st.columns(2)
+        col1.metric("Stick-Slip Index", ss_index, help="A measure of torsional instability.")
+        col2.metric("Vibration Severity", vibration_severity, help="Indicates axial vibration.")
+        fig, ax = plt.subplots(figsize=(10, 5)); ax.plot(time_sim, torque, label="Torque (Nm)", color="dodgerblue"); ax.plot(time_sim, displacement, label="Axial Displacement (m)", color="darkorange")
+        ax.set_xlabel("Time (s)"); ax.set_ylabel("Response"); ax.set_title("Drillstring Response Over Time"); ax.legend(); ax.grid(True, alpha=0.3); st.pyplot(fig)
+        results_df = pd.DataFrame({"Time (s)": time_sim, "Torque (Nm)": torque, "Displacement (m)": displacement, "RPM": rpm_series})
+        csv = results_df.to_csv(index=False); st.download_button(label="Download Results as CSV", data=csv, file_name="drillstring_results.csv", mime="text/csv")
 
     # --- PREDICTIVE MAINTENANCE TABS ---
     asset_ids = ['ESP_01', 'Pump_02', 'Valve_03', 'Compressor_04']
@@ -180,15 +199,36 @@ def main():
 
     with tab5:
         st.header("Field-Wide Asset Health")
-        # ... rest of the tab's code ...
+        selected_asset = st.selectbox("Select an Asset to Inspect", asset_ids)
+        asset_df = df_with_anomalies[df_with_anomalies['asset_id'] == selected_asset]
+        fig = px.line(asset_df, x='timestamp', y='temperature', title=f'{selected_asset} - Temperature Profile')
+        anomalies = asset_df[asset_df['is_anomaly'] == 1]
+        fig.add_trace(px.scatter(anomalies, x='timestamp', y='temperature').data[0].update(mode='markers', marker=dict(color='red', size=8), name='Anomaly'))
+        st.plotly_chart(fig, use_container_width=True)
 
     with tab6:
         st.header("AI-Powered Forecasts")
-        # ... rest of the tab's code ...
+        selected_asset_forecast = st.selectbox("Select Asset for AI Forecasting", asset_ids, key="forecast_select")
+        forecast_asset_df = df_with_anomalies[df_with_anomalies['asset_id'] == selected_asset_forecast]
+        with st.spinner(f"Training LSTM model for {selected_asset_forecast}..."):
+            lstm_model, scaler = train_lstm_model(forecast_asset_df, feature='temperature')
+            forecasted_temp = predict_next_hour_temp(lstm_model, scaler, forecast_asset_df, feature='temperature')
+        st.metric(label=f"Predicted Temperature in the Next Hour for {selected_asset_forecast}", value=f"{forecasted_temp:.2f}°F")
+        if forecasted_temp > temp_threshold: st.warning("Forecasted temperature exceeds the safety threshold!")
+        else: st.success("Forecasted temperature is within the normal operating range.")
 
     with tab7:
         st.header("Alerts & Optimized Maintenance Schedule")
-        # ... rest of the tab's code ...
+        active_alerts_df = df_with_anomalies[(df_with_anomalies['temperature'] > temp_threshold) | (df_with_anomalies['vibration'] > vib_threshold)]
+        df_with_anomalies['downtime_risk'] = df_with_anomalies['is_anomaly'] * downtime_cost
+        maintenance_schedule = df_with_anomalies.groupby('asset_id')['downtime_risk'].sum().sort_values(ascending=False).reset_index()
+        col1, col2 = st.columns(2)
+        with col1:
+            st.subheader("Active Critical Alerts")
+            st.dataframe(active_alerts_df[['timestamp', 'asset_id', 'temperature', 'vibration']])
+        with col2:
+            st.subheader("Prioritized Maintenance Plan")
+            st.dataframe(maintenance_schedule.rename(columns={'downtime_risk': 'Estimated Downtime Cost ($)'}))
 
 # --- 4. RUN THE APP ---
 if __name__ == "__main__":
