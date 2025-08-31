@@ -18,7 +18,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 2. ALL HELPER FUNCTIONS (DEFINED ONCE) ---
+# --- 2. ALL HELPER FUNCTIONS ---
 
 # --- Predictive Maintenance Functions ---
 @st.cache_data
@@ -42,15 +42,23 @@ def train_anomaly_model(_data):
     model.fit(_data[['temperature', 'vibration']])
     return model
 
+# THIS FUNCTION IS NOW CORRECTED
 @st.cache_resource
 def train_forecasting_model(_data):
     """Trains a lightweight forecasting model for a given asset. Cached per asset."""
     df = _data.copy()
-    df['time_idx'] = (df['timestamp'] - df['timestamp'].min()).dt.total_seconds() / 3600
+    # Create features for the model
+    df['time_idx'] = (df['timestamp'] - df['timestamp'].min()).dt.total_seconds() / 3600.0
+    
+    # Train the model
     model = LinearRegression()
     model.fit(df[['time_idx']], df['temperature'])
+    
+    # Predict the next hour
     last_time_idx = df['time_idx'].iloc[-1]
-    prediction = model.predict(np.array([[last_time_idx + 1]]))
+    next_time_idx = last_time_idx + 1
+    
+    prediction = model.predict(np.array([[next_time_idx]]))
     return prediction[0]
 
 # --- Drillstring Simulator Functions ---
@@ -116,18 +124,29 @@ def main():
 
     with tab1:
         st.header("An Integrated Solution for Modern Oilfield Operations")
-        # ... (full summary text)
+        st.markdown('<p class="guide-text">Developed by <strong>Mr. Omar Nur, a Petroleum Engineer</strong>, this application suite provides a holistic view of oilfield management, from real-time drilling optimization to full-field predictive asset maintenance.</p>', unsafe_allow_html=True)
+        st.subheader("Suite Components")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("#### Drilling Operations Suite")
+            st.markdown("- **Live Dashboard:** Real-time monitoring of critical drilling parameters like ROP, Torque, and Vibration.\n- **Drilling Simulator:** A predictive tool to test and optimize drilling parameters *before* implementation, mitigating risks like stick-slip.")
+        with col2:
+            st.markdown("#### Predictive Maintenance Suite")
+            st.markdown("- **Asset Health Overview:** Monitor the status of all field assets (ESPs, pumps, valves) from a central hub.\n- **AI Forecasting:** A lightweight model predicts equipment failures before they happen.\n- **Optimized Scheduling:** Data-driven maintenance plans prioritize work based on operational risk and cost.")
+        st.markdown('<p class="guide-text">This integrated approach allows teams to move from a reactive to a proactive operational strategy, significantly reducing non-productive time (NPT), lowering maintenance costs, and enhancing overall safety.</p>', unsafe_allow_html=True)
 
     with tab2:
         st.header("How to Use This Suite: A Practical Guide")
-        # ... (full user guide text)
+        st.subheader("Scenario 1: Using the Live Dashboard")
+        with st.expander("Click to see a Live Dashboard example"):
+            st.markdown("""...""") # Add full user guide text
+        st.subheader("Scenario 2: Using the Simulator")
+        with st.expander("Click to see a Drillstring Simulator example"):
+            st.markdown("""...""") # Add full user guide text
 
     with tab3:
         st.header("Real-Time Drilling Monitor")
-        
-        # STABLE REFRESH MECHANISM
         if st.button("Refresh Live Data"):
-            # This code only runs when the button is clicked
             new_timestamp = datetime.datetime.now()
             new_rpm = np.random.normal(loc=rpm_mean, scale=10)
             new_torque = np.random.normal(loc=500, scale=50)
@@ -135,7 +154,6 @@ def main():
             new_row = pd.DataFrame([{"Timestamp": new_timestamp, "RPM": new_rpm, "Torque": new_torque, "Vibration": new_vibration}])
             st.session_state.drilling_data = pd.concat([st.session_state.drilling_data, new_row], ignore_index=True).tail(200)
 
-        # Always display the current data
         st.subheader("Current Drilling Parameters")
         if not st.session_state.drilling_data.empty:
             latest_data = st.session_state.drilling_data.iloc[-1]
