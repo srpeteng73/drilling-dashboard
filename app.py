@@ -9,6 +9,22 @@ st.set_page_config(
     page_title="LIVE Drilling Dashboard", layout="wide", initial_sidebar_state="expanded"
 )
 
+# --- Custom CSS for Background Gradient ---
+st.markdown(
+    """
+    <style>
+    .stApp {
+        background: linear-gradient(to right, #000428, #004e92);
+        color: white;
+    }
+    .stSidebar .sidebar-content {
+        background: linear-gradient(to bottom, #000428, #004e92);
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 # --- Sidebar (remains static and is always available) ---
 with st.sidebar.expander("📘 Glossary of Drilling Terms"):
     st.markdown("- **BHA**: Bottom Hole Assembly\n- **MWD**: Measurement While Drilling\n- **ROP**: Rate of Penetration\n- **Bit Wear Index**: Metric for bit degradation")
