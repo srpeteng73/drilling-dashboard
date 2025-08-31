@@ -4,12 +4,14 @@ import numpy as np
 import datetime
 import plotly.express as px
 import matplotlib.pyplot as plt
+
+# Import ONLY the required, lighter ML libraries
 from sklearn.ensemble import IsolationForest
 from sklearn.linear_model import LinearRegression
 
 # --- 1. PAGE CONFIGURATION ---
 st.set_page_config(
-    page_title="Drilling & Maintenance Suite by Omar Nur",
+    page_title="Drilling & Maintenance Suite",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -20,7 +22,6 @@ st.set_page_config(
 def generate_full_field_data(asset_ids):
     """Generates a smaller, memory-efficient dataset."""
     all_asset_data = []
-    # REDUCED DATA SIZE for stability on free hosting
     num_periods = 100 
     for asset_id in asset_ids:
         time_index = pd.date_range(start='2025-01-01', periods=num_periods, freq='h')
@@ -51,7 +52,7 @@ def train_forecasting_model(_data):
     return prediction[0]
 
 def run_drillstring_model(params):
-    time_sim = np.linspace(0, 10, 500) # Reduced points for faster plotting
+    time_sim = np.linspace(0, 10, 500)
     freq = params["rpm"] / 60
     friction = {"Soft": 0.8, "Medium": 1.0, "Hard": 1.2}[params["formation"]]
     bit = {"PDC": 1.0, "Tricone": 0.9, "Diamond": 1.1}[params["bit_type"]]
@@ -97,11 +98,18 @@ tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["**Summary**", "**User Guide
 with tab1:
     st.header("An Integrated Solution for Modern Oilfield Operations")
     st.markdown('Developed by **Mr. Omar Nur, a Petroleum Engineer**, this application suite provides a holistic view of oilfield management, from real-time drilling optimization to full-field predictive asset maintenance.')
-    # ... (Full Summary Content)
+    st.markdown("""
+    **Suite Components**
+    - **Drilling Operations Suite:** Live monitoring and predictive simulation for drilling parameters.
+    - **Predictive Maintenance Suite:** Full-field asset health monitoring, AI-powered failure forecasting, and data-driven maintenance scheduling.
+    """)
 
 with tab2:
     st.header("How to Use This Suite: A Practical Guide")
-    # ... (Full User Guide Content)
+    with st.expander("Scenario 1: Using the Live Dashboard"):
+        st.markdown("Monitor real-time drilling data. If you see a high vibration warning, adjust the 'Live Target RPM' in the sidebar and click 'Refresh' to see if it mitigates the issue.")
+    with st.expander("Scenario 2: Using the Simulator"):
+        st.markdown("Before drilling a new formation, set the parameters in the 'Drillstring Simulator Controls'. The charts will update automatically, allowing you to find the most stable configuration to prevent issues like stick-slip.")
 
 with tab3:
     st.header("Real-Time Drilling Monitor")
@@ -111,7 +119,7 @@ with tab3:
             "RPM": np.random.normal(loc=rpm_mean, scale=10),
             "Torque": np.random.normal(loc=500, scale=50),
             "Vibration": np.random.normal(loc=0.5, scale=0.1),
-            "Bit Wear Index": 0, "ROP (ft/hr)": 0 # Simplified for stability
+            "Bit Wear Index": 0, "ROP (ft/hr)": 0
         }])
         st.session_state.drilling_data = pd.concat([st.session_state.drilling_data, new_row], ignore_index=True).tail(100)
         st.toast("Live data updated!")
@@ -142,7 +150,7 @@ if not st.session_state.maintenance_data_ready:
     st.info("The Predictive Maintenance module is not loaded to ensure a fast startup. Click the button below to activate it.")
     if st.button("Load Asset Data & Train AI Models"):
         with st.spinner("Performing one-time data generation and model training... Please wait."):
-            asset_ids = ['ESP_01', 'Pump_02', 'Valve_03'] # Reduced assets for memory
+            asset_ids = ['ESP_01', 'Pump_02', 'Valve_03']
             full_data = generate_full_field_data(asset_ids)
             st.session_state.full_field_df = full_data
             anomaly_model = train_anomaly_model(full_data)
