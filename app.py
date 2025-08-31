@@ -11,45 +11,52 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- Custom CSS for a Professional Dark Theme ---
+# --- Custom CSS for a Clean, Light Gradient Theme ---
 st.markdown("""
 <style>
-    /* Main app background */
+    /* Main app background with a subtle gradient */
     .stApp {
-        background-color: #0f1116;
-        color: #e6e6e6;
+        background: linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%);
+        color: #31333F; /* Darker text for readability */
     }
 
     /* Sidebar style */
     [data-testid="stSidebar"] {
-        background-color: #151820;
+        background-color: rgba(255, 255, 255, 0.7); /* Semi-transparent white */
+        backdrop-filter: blur(5px);
+    }
+
+    /* Style for the expander in the sidebar */
+    [data-testid="stExpander"] {
+        background-color: rgba(255, 255, 255, 0.8);
+        border-radius: 10px;
+    }
+    
+    /* Style for the info box in the sidebar */
+    [data-testid="stInfo"] {
+        background-color: rgba(230, 247, 255, 0.8);
     }
 
     /* Metric label text (e.g., "Live RPM") */
     [data-testid="stMetricLabel"] {
-        color: #a0a4b8;
+        color: #5A5A5A;
     }
 
     /* Style for success alerts (green) */
     [data-testid="stAlert"][data-baseweb="alert-success"] {
-        background-color: rgba(45, 158, 87, 0.2);
-        color: #e6e6e6;
+        background-color: rgba(45, 158, 87, 0.1);
+        border: 1px solid rgba(45, 158, 87, 0.5);
     }
 
     /* Style for warning alerts (yellow) */
     [data-testid="stAlert"][data-baseweb="alert-warning"] {
-        background-color: rgba(225, 179, 42, 0.2);
-        color: #e6e6e6;
-    }
-
-    /* Make chart backgrounds transparent */
-    .stLineChart {
-        background-color: transparent;
+        background-color: rgba(225, 179, 42, 0.1);
+        border: 1px solid rgba(225, 179, 42, 0.5);
     }
 
     /* Title and header colors */
     h1, h2, h3 {
-        color: #ffffff;
+        color: #0E1117;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -122,7 +129,8 @@ while True:
 
         # Optimization Insights
         st.subheader("📈 Optimization Insights")
-        st.line_chart(st.session_state.driling_data.set_index("Timestamp")[["Bit Wear Index", "ROP (ft/hr)"]], use_container_width=True)
+        # --- THIS IS THE LINE THAT WAS CORRECTED ---
+        st.line_chart(st.session_state.drilling_data.set_index("Timestamp")[["Bit Wear Index", "ROP (ft/hr)"]], use_container_width=True)
 
     # Wait before the next update
     time.sleep(1)
